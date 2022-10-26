@@ -16,11 +16,11 @@ const userSchema = new mongoose.Schema({
         minlength: 6,
     },
     phone: {
-        type: Number,
+        type: String,
         required: true,
         unique: true,
         minlength: 8,
-    },
-})
+    }
+}, {timestamps: true})
 
 module.exports = mongoose.model('User', userSchema)
