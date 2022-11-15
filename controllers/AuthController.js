@@ -2,6 +2,7 @@ const User = require('../models/user')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
+
 const register = (req,res,next) => {
     bcrypt.hash(req.body.password, 10,function (err,hashedPass){
         if (err){
@@ -35,7 +36,7 @@ const login =(req,res, next)=>{
     var username = req.body.username
     var password = req.body.password
 
-    User.findOne({$or: [{email:username},{phone:username}]})
+    User.findOne({$or: [{email:username},{phone:username},{username:username}]})
         .then(user => {
             if(user){
                 bcrypt.compare(password,user.password, function (err,result){
