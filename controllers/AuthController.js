@@ -41,8 +41,8 @@ const login =(req,res, next)=>{
             if(user){
                 bcrypt.compare(password,user.password, function (err,result){
                     if (err){
-                        res.json({
-                           error: err
+                        res.status().json({
+                           error: err.message
                         })
                     }
                     if (result){
@@ -52,7 +52,7 @@ const login =(req,res, next)=>{
                             token
                         })
                     }else {
-                        res.json({
+                        res.status(210).json({
                             message: 'Password does not match!'
                         })
                     }
