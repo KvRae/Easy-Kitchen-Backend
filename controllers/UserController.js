@@ -1,5 +1,8 @@
 const User = require('../models/user');
 
+
+
+//get user by id
 exports.getUserbyid = (req, res, next) => {
     User.findOne({ _id: req.params.id })
         .then(user => res.status(200).json(user))

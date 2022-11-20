@@ -14,8 +14,12 @@ app.use(express.json())
 
 const userRouter = require('./routes/users')
 const authRoute = require('./routes/auth')
+const ingredientRouter = require('./routes/ingredients')
+
+app.use('/api/', authRoute)
 
 app.use('/api/users', userRouter)
-app.use('/api/', authRoute)
+
+app.use('/api/ingredients', ingredientRouter)
 
 app.listen(3000, () => console.log('Server Started'))
