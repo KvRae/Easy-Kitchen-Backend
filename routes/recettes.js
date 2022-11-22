@@ -5,6 +5,7 @@ var recette = require('../models/recette');
 const RecetteCtrl = require('../controllers/RecetteController');
 
 router.get('/', RecetteCtrl.getAll);
+router.get('/:id', RecetteCtrl.getRecettebyid);
 
 router.post('/', RecetteCtrl.add);
 

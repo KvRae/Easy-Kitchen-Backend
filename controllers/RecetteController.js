@@ -6,6 +6,13 @@ exports.getAll = async (req, res) => {
     res.send({ recettes: await recette.find() })
 }
 
+//get recette by id
+exports.getRecettebyid = (req, res, next) => {
+    recette.findOne({ _id: req.params.id })
+        .then(recette => res.status(200).json(recette))
+        .catch(error => res.status(404).json({ message: "recette not found Check id" }));
+}
+
 // add recette
 exports.add = async (req, res) => {
 
@@ -24,7 +31,7 @@ exports.add = async (req, res) => {
     res.status(201).send({ message: "success", recette: newRecette })
 }
 
-//update user
+//update recette
 exports.edit = (req, res, next) => {
     recette.updateOne({ _id: req.params.id}, { name: req.body.name ,
         description: req.body.description,
@@ -38,7 +45,7 @@ exports.edit = (req, res, next) => {
         .catch(error => res.json({ message: "Check id" }));
 }
 
-//delete user
+//delete recette
 exports.delete = (req, res, next) => {
     recette.deleteOne({ _id: req.params.id })
         .then(() => res.status(200).json({ message: 'recette deleted !' }))
