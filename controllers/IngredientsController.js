@@ -21,17 +21,18 @@ exports.add = async (req, res) => {
 
 // update ingredient
 exports.edit = async (req, res) => {
-    const { _id, name} = req.body
+    const { _id, name, image} = req.body
 
-    let ingredient= await ingredient.findOneAndUpdate(
+    let ingredient1= await ingredient.findOneAndUpdate(
         { _id: _id },
         {
             $set: {
-                name: name
+                name: name,
+                image: image
             }
         }
     )
-    res.status(201).send({ message: "success", ingredient: ingredient })
+    res.status(201).send({ message: "success", ingredient: ingredient1 })
 }
 
 // delete ingredient by id

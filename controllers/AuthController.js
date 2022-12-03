@@ -32,35 +32,31 @@ const register = (req,res,next) => {
 
 }
 
-const login =(req,res, next)=>{
-    var username = req.body.username
-    var password = req.body.password
-
-    User.findOne({$or: [{email:username},{phone:username},{username:username}]})
+const login = (req, res, next) => {
+    User.findOne({ username: req.body.username })
         .then(user => {
-            if(user){
-                bcrypt.compare(password,user.password, function (err,result){
-                    if (err){
-                        res.status().json({
-                           error: err.message
-                        })
-                    }
-                    if (result){
-                        let token = jwt.sign({name: user.username},'verySecretValue',{expiresIn:'1h'})
-                        res.json({
-                            message: 'Login Successfull',
-                            token
-                        })
-                    }else {
-                        res.status(210).json({
-                            message: 'Password does not match!'
-                        })
-                    }
-                })
-            }else {
-                message: 'No user Found!'
+            if (!user) {
+                return res.status(401).json({ error: 'wrong username ', error });
             }
+            bcrypt.compare(req.body.password, user.password)
+                .then(valid => {
+                    console.log(req.body.password + " " + user.password);
+                    if (!valid) {
+                        return res.status(401).json({ error: 'wrong password' });
+                    }
+                    res.status(200).json({
+                        user: user,
+                        token: jwt.sign({ userId: user._id },
+                            'RANDOM_TOKEN_SECRET', { expiresIn: '24h' }
+                        )
+
+                    });
+                })
+                .catch(error => res.status(500).json({ error }));
         })
-}
+        .catch(error => res.status(500).json({ error }));
+
+
+};
 
 module.exports = { register,login}
