@@ -3,7 +3,9 @@ const ingredient = require("../models/ingredient");
 
 // get all ingredients
 exports.getAll = async (req, res) => {
-    res.send({ ingredients: await ingredient.find() })
+    ingredient.find()
+        .then(ingredient => res.status(200).json(ingredient))
+        .catch(error => res.status(400).json({ error }));
 }
 
 // add ingredient

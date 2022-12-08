@@ -1,11 +1,6 @@
 const mongoose = require('mongoose')
 
 const ingredientsSchema = new mongoose.Schema({
-
-    idIngredient: {
-        type: String,
-        required: true
-    },
     strIngredient: {
         type: String,
         required: true,
@@ -15,9 +10,6 @@ const ingredientsSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true
-    },
-    strType: {
-        type: String
     }
 }, {timestamps: true})
 
