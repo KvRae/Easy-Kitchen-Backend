@@ -21,6 +21,7 @@ const ingredientRouter = require('./routes/ingredients')
 const recetteRouter = require('./routes/recettes')
 const categoryRouter = require('./routes/categories')
 const foodRouter = require('./routes/foods')
+const areaRouter = require('./routes/areas')
 
 
 
@@ -38,6 +39,8 @@ app.use('/api/recettes', recetteRouter)
 
 app.use('/api/categories', categoryRouter)
 
-app.use('/api/foods', foodRouter)
+app.use('/api/food', foodRouter)
+
+app.use('/api/area', areaRouter)
 
 app.listen(3000, () => console.log('Server Started'))
