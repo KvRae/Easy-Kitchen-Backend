@@ -8,7 +8,6 @@ const areaSchema = new mongoose.Schema({
     },
     strAreaThumb: {
         type: String,
-        required: true,
     }
 }, { timestamps: true })
 

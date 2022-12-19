@@ -5,10 +5,15 @@ const app = express()
 const mongoose = require('mongoose')
 
 const multer = require('multer')
+const url = "mongodb+srv://kvrae:efYyteZ8gcH0UHzL@kvraedbs.i1btn1q.mongodb.net/EasyKitchen?retryWrites=true&w=majority"
 
 
-mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true })
+
+mongoose.connect(url, { useNewUrlParser: true,useUnifiedTopology:true })
 const db = mongoose.connection
+
+
+
 
 db.on('error', (error) => console.error(error))
 db.once('open', () => console.log('Connected to Database'))
@@ -41,6 +46,6 @@ app.use('/api/categories', categoryRouter)
 
 app.use('/api/food', foodRouter)
 
-app.use('/api/area', areaRouter)
+app.use('/api/areas', areaRouter)
 
 app.listen(3000, () => console.log('Server Started'))

@@ -9,17 +9,14 @@ const foodSchema = new mongoose.Schema({
     strMealThumb: {
         type: String,
         required: true,
-        unique: true
     },
     strArea: {
         type: String,
         required: true,
-        unique: true
     },
     strCategory: {
         type: String,
         required: true,
-        unique: true
     },
     strInstructions: {
         type: String,
