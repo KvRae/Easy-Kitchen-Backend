@@ -5,11 +5,10 @@ const app = express()
 const mongoose = require('mongoose')
 
 const multer = require('multer')
-const url = "mongodb+srv://kvrae:efYyteZ8gcH0UHzL@kvraedbs.i1btn1q.mongodb.net/EasyKitchen?retryWrites=true&w=majority"
 
 
 
-mongoose.connect(url, { useNewUrlParser: true,useUnifiedTopology:true })
+mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true,useUnifiedTopology:true })
 const db = mongoose.connection
 
 
