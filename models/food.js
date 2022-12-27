@@ -13,12 +13,10 @@ const foodSchema = new mongoose.Schema({
     strArea: {
         type: String,
         required: true,
-
     },
     strCategory: {
         type: String,
         required: true,
-
     },
     strInstructions: {
         type: String,
@@ -91,7 +89,6 @@ const foodSchema = new mongoose.Schema({
     },
     strIngredient20: {
         type: String,
-
     },
     strMeasure1: {
         type: String,
