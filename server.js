@@ -27,6 +27,7 @@ mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true })
 const db = mongoose.connection
 
 
+
 db.on('error', (error) => console.error(error))
 db.once('open', () => console.log('Connected to Database'))
 
@@ -35,10 +36,12 @@ db.once('open', () => console.log('Connected to Database'))
 const userRouter = require('./routes/users')
 const authRoute = require('./routes/auth')
 const ingredientRouter = require('./routes/ingredients')
-const recetteRouter = require('./routes/recettes')
+//const recetteRouter = require('./routes/recettes')
 const categoryRouter = require('./routes/categories')
 const foodRouter = require('./routes/foods')
+
 const commentRouter = require('./routes/comments')
+
 const areaRouter = require('./routes/areas')
 
 
@@ -47,6 +50,7 @@ app.use(express.json())
 
 //app.use(multer({dest: 'images'}).single('image'))
 
+
 // use routes
 app.use('/api/', authRoute)
 
@@ -54,11 +58,12 @@ app.use('/api/users', userRouter)
 
 app.use('/api/ingredients', ingredientRouter)
 
-app.use('/api/recettes', recetteRouter)
+//app.use('/api/recettes', recetteRouter)
 
 app.use('/api/categories', categoryRouter)
 
-app.use('/api/foods', foodRouter)
+
+app.use('/api/food', foodRouter)
 
 app.use('/api/comments', commentRouter)
 
@@ -79,5 +84,6 @@ app.post('/api/uploadfile', upload.single('myFile'), (req, res, next) => {
     }
     res.send({code:200, msg:file})
   })
+
 
 app.listen(3000, () => console.log('Server Started'))

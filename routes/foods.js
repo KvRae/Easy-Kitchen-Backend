@@ -6,7 +6,6 @@ const foodCtrl = require('../controllers/FoodController');
 
 router.get('/', foodCtrl.getAll);
 
-
 router.get('/:id', foodCtrl.getById);
 
 module.exports = router;
