@@ -4,10 +4,10 @@ var router = express.Router();
 var recette = require('../models/recette');
 const RecetteCtrl = require('../controllers/RecetteController');
 
-//router.get('/', RecetteCtrl.getAll);
-//router.get('/:id', RecetteCtrl.getRecettebyid);
+router.get('/', RecetteCtrl.getAll);
+router.get('/:id', RecetteCtrl.getRecettebyid);
 
-//router.get('/:id/comments', RecetteCtrl.getAllByRecette);
+router.get('/:id/comments', RecetteCtrl.getAllByRecette);
 
 router.post('/', RecetteCtrl.add);
 
