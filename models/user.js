@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
 
+const schema = mongoose.Schema;
+
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -20,7 +22,11 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
         minlength: 8,
-    }
+    },
+    recettes: [{ type: schema.Types.ObjectId, ref: "Recette" }],
+    comments:[{ type:schema.Types.ObjectId, ref:"Comment"}]
+
+
 }, {timestamps: true})
 
 module.exports = mongoose.model('User', userSchema)
