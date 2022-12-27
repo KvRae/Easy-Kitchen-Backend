@@ -1,0 +1,1 @@
+{"version":"1.0.0","name":"current-project","dependencies":{"bcryptjs":{"version":"2.4.3"},"express":{"version":"4.18.2"},"jsonwebtoken":{"version":"8.5.1"},"mongoose":{"version":"5.5.7"},"multer":{"version":"1.4.5-lts.1"},"netlify-lambda":{"version":"2.0.15"}}}
