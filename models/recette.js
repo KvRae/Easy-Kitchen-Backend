@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const schema = mongoose.Schema;
 
+
 const recetteSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -13,6 +14,7 @@ const recetteSchema = new mongoose.Schema({
     image: {
         type: String,
         required: true
+
     },
     isBio: {
         type: Boolean,
@@ -180,6 +182,7 @@ const recetteSchema = new mongoose.Schema({
           strMeasure20: {
               type: String,
           }
+
 }, {timestamps: true})
 
 module.exports = mongoose.model('Recette', recetteSchema)

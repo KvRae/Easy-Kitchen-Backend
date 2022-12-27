@@ -9,17 +9,26 @@ const foodSchema = new mongoose.Schema({
     strMealThumb: {
         type: String,
         required: true,
+<<<<<<< HEAD
         unique: true
+=======
+>>>>>>> 9380333679434627b3a9a1355af6ba0adc8b34f5
     },
     strArea: {
         type: String,
         required: true,
+<<<<<<< HEAD
         unique: true
+=======
+>>>>>>> 9380333679434627b3a9a1355af6ba0adc8b34f5
     },
     strCategory: {
         type: String,
         required: true,
+<<<<<<< HEAD
         unique: true
+=======
+>>>>>>> 9380333679434627b3a9a1355af6ba0adc8b34f5
     },
     strInstructions: {
         type: String,
@@ -92,6 +101,85 @@ const foodSchema = new mongoose.Schema({
     },
     strIngredient20: {
         type: String,
+<<<<<<< HEAD
+=======
+    },
+    strMeasure1: {
+        type: String,
+    },
+    strMeasure2: {
+        type: String,
+    }
+    ,
+    strMeasure3: {
+        type: String,
+    }
+    ,
+    strMeasure4: {
+        type: String,
+    }
+    ,
+    strMeasure5: {
+        type: String,
+    }
+    ,
+    strMeasure6: {
+        type: String,
+    }
+    ,
+    strMeasure7: {
+        type: String,
+    }
+    ,
+    strMeasure8: {
+        type: String,
+    },
+    strMeasure9: {
+        type: String,
+    }
+    ,
+    strMeasure10: {
+        type: String,
+    }
+    ,
+    strMeasure11: {
+        type: String,
+    }
+    ,
+    strMeasure12: {
+        type: String,
+    }
+    ,
+    strMeasure13: {
+        type: String,
+    }
+    ,
+    strMeasure14: {
+        type: String,
+    },
+    strMeasure15: {
+        type: String,
+    },
+    strMeasure16: {
+        type: String,
+    }
+    ,
+    strMeasure17: {
+        type: String,
+
+    }
+    ,
+    strMeasure18: {
+        type: String,
+    }
+    ,
+    strMeasure19: {
+        type: String,
+    }
+    ,
+    strMeasure20: {
+        type: String,
+>>>>>>> 9380333679434627b3a9a1355af6ba0adc8b34f5
     }
 }, {timestamps: true})
 

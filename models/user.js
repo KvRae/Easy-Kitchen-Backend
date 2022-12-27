@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
     recettes: [{ type: schema.Types.ObjectId, ref: "Recette" }],
     comments:[{ type:schema.Types.ObjectId, ref:"Comment"}]
 
+
 }, {timestamps: true})
 
 module.exports = mongoose.model('User', userSchema)
