@@ -14,7 +14,6 @@ exports.getAll = async (req, res) => {
 //get recette by id
 exports.getRecettebyid = (req, res, next) => {
     recette.findOne({ _id: req.params.id })
-<<<<<<< HEAD
         .then((recette) => res.status(200).json(recette))
         .catch(error => res.status(404).json({ message: "recette not found Check id" }));
 }

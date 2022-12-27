@@ -9,26 +9,16 @@ const foodSchema = new mongoose.Schema({
     strMealThumb: {
         type: String,
         required: true,
-<<<<<<< HEAD
-        unique: true
-=======
->>>>>>> 9380333679434627b3a9a1355af6ba0adc8b34f5
     },
     strArea: {
         type: String,
         required: true,
-<<<<<<< HEAD
-        unique: true
-=======
->>>>>>> 9380333679434627b3a9a1355af6ba0adc8b34f5
+
     },
     strCategory: {
         type: String,
         required: true,
-<<<<<<< HEAD
-        unique: true
-=======
->>>>>>> 9380333679434627b3a9a1355af6ba0adc8b34f5
+
     },
     strInstructions: {
         type: String,
@@ -101,8 +91,7 @@ const foodSchema = new mongoose.Schema({
     },
     strIngredient20: {
         type: String,
-<<<<<<< HEAD
-=======
+
     },
     strMeasure1: {
         type: String,
@@ -179,7 +168,6 @@ const foodSchema = new mongoose.Schema({
     ,
     strMeasure20: {
         type: String,
->>>>>>> 9380333679434627b3a9a1355af6ba0adc8b34f5
     }
 }, {timestamps: true})
 
