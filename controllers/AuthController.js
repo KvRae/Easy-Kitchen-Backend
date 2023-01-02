@@ -21,13 +21,13 @@ const register = (req,res,next) => {
             .then(user => {
                 res.json({
                     user,
-                    message : "user Added Successfully"
+                    message : "Account created successfully"
 
                 })
             })
             .catch(err => {
                 res.json({
-                    message: 'An error occured!'
+                    message: 'User already created with this credentials!'
                 })
             })
     })

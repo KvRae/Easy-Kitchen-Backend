@@ -24,7 +24,6 @@ exports.updateUser = (req, res, next) => {
         _id: req.params.id,
         username: req.body.username,
         email: req.body.email,
-        password: hashedPass,
         phone: req.body.phone
     });
     User.updateOne({ _id: req.params.id }, user)
