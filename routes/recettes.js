@@ -5,9 +5,14 @@ var recette = require('../models/recette');
 const RecetteCtrl = require('../controllers/RecetteController');
 
 router.get('/', RecetteCtrl.getAll);
+router.get('/bio', RecetteCtrl.getAllBio);
+
 router.get('/:id', RecetteCtrl.getRecettebyid);
 
 router.get('/:id/comments', RecetteCtrl.getAllByRecette);
+
+router.get('/:id/recettes', RecetteCtrl.getAllByUser);
+
 
 router.post('/', RecetteCtrl.add);
 
