@@ -10,6 +10,12 @@ exports.getAll = async (req, res) => {
         .then(recette => res.status(200).json(recette))
         .catch(error => res.status(400).json({ error }));
 }
+// get all bio recettes
+exports.getAllBio = async (req, res) => {
+    recette.find({isBio:true})
+        .then(recette => res.status(200).json(recette))
+        .catch(error => res.status(400).json({ error }));
+}
 
 //get recette by id
 exports.getRecettebyid = (req, res, next) => {
@@ -18,7 +24,22 @@ exports.getRecettebyid = (req, res, next) => {
         .catch(error => res.status(404).json({ message: "recette not found Check id" }));
 }
 
-// get all comments by recette
+// TODO: get all comments by recette
+exports.getAllByRecette = async (req, res,next) => {
+    recette.findOne({ _id: req.params.id }).populate("comments")
+    .then(recette => res.status(200).json(recette.comments))
+    .catch(error => res.status(404).json({ message: "comment not found Check id" }));
+
+}
+
+// get all recettes by user
+exports.getAllByUser = async (req, res,next) => {
+    user.findOne({ _id: req.params.id }).populate("recettes")
+    .then(user => res.status(200).json(user.recettes))
+    .catch(error => res.status(404).json({ message: "user not found Check id" }));
+
+}
+// get all recette by user
 exports.getAllByRecette = async (req, res,next) => {
     recette.findOne({ _id: req.params.id }).populate("comments")
     .then(recette => res.status(200).json(recette.comments))
@@ -131,7 +152,7 @@ if (!obj.usersDisliked.includes(req.body.id) ){
 // add recette
 exports.add = async (req, res) => {
 
-    const { name,description ,image,isBio,duration,person,difficulty,userId,
+    const { name,description ,image,isBio,duration,person,difficulty,userId,username,
         strIngredient1,strIngredient2,strIngredient3,strIngredient4,strIngredient5,
         strIngredient6,strIngredient7,strIngredient8,strIngredient9,strIngredient10,
         strIngredient11,strIngredient12,strIngredient13,strIngredient14,strIngredient15,
@@ -149,6 +170,7 @@ exports.add = async (req, res) => {
     newRecette.person = person
     newRecette.difficulty = difficulty
     newRecette.user= userId
+    newRecette.username=username
     newRecette.strIngredient1=strIngredient1,
     newRecette.strIngredient2=strIngredient2,
     newRecette.strIngredient3=strIngredient3,
@@ -213,7 +235,48 @@ exports.edit = (req, res, next) => {
         isBio:req.body.isBio,
         duration:req.body.duration,
         person:req.body.person,
-        difficulty:req.body.difficulty
+        difficulty:req.body.difficulty,    
+        strIngredient1:req.body.strIngredient1,
+        strIngredient2:req.body.strIngredient2,
+        strIngredient3:req.body.strIngredient3,
+        strIngredient4:req.body.strIngredient4,
+        strIngredient5:req.body.strIngredient5,
+        strIngredient6:req.body.strIngredient6,
+        strIngredient7:req.body.strIngredient7,
+        strIngredient8:req.body.strIngredient8,
+        strIngredient9:req.body.strIngredient9,
+        strIngredient10:req.body.strIngredient10,
+        strIngredient11:req.body.strIngredient11,
+        strIngredient12:req.body.strIngredient12,
+        strIngredient13:req.body.strIngredient13,
+        strIngredient14:req.body.strIngredient14,
+        strIngredient15:req.body.strIngredient15,
+        strIngredient16:req.body.strIngredient16,
+        strIngredient17:req.body.strIngredient17,
+        strIngredient18:req.body.strIngredient18,
+        strIngredient19:req.body.strIngredient19,
+        strIngredient20:req.body.strIngredient20,
+        strIngredient20:req.body.strIngredient20,
+        strMeasure1:req.body.strMeasure1,
+        strMeasure2:req.body.strMeasure2,
+        strMeasure3:req.body.strMeasure3,
+        strMeasure4:req.body.strMeasure4,
+        strMeasure5:req.body.strMeasure5,
+        strMeasure6:req.body.strMeasure6,
+        strMeasure7:req.body.strMeasure7,
+        strMeasure8:req.body.strMeasure8,
+        strMeasure9:req.body.strMeasure9,
+        strMeasure10:req.body.strMeasure10,
+        strMeasure11:req.body.strMeasure11,
+        strMeasure12:req.body.strMeasure12,
+        strMeasure13:req.body.strMeasure13,
+        strMeasure14:req.body.strMeasure14,
+        strMeasure15:req.body.strMeasure15,
+        strMeasure16:req.body.strMeasure16,
+        strMeasure17:req.body.strMeasure17,
+        strMeasure18:req.body.strMeasure18,
+        strMeasure19:req.body.strMeasure19,
+        strMeasure20:req.body.strMeasure20
     })
         .then(() => res.json({ message: 'recette modified !' }))
         .catch(error => res.json({ message: "Check id" }));

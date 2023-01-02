@@ -19,12 +19,13 @@ exports.getCommentbyid = (req, res, next) => {
 // add comment
 exports.add = async (req, res) => {
 
-    const { text,recetteId ,userId} = req.body;
+    const { text,recetteId ,userId,username} = req.body;
 
     const newComment = new comment()
     newComment.text = text
     newComment.recette = recetteId
     newComment.user = userId
+    newComment.username= username
     newComment.save();
     await Promise.all([recette.updateOne({ _id: recetteId },
         {
