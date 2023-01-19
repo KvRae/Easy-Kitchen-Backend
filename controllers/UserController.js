@@ -37,3 +37,16 @@ exports.deleteUser = (req, res, next) => {
         .then(() => res.status(200).json({ message: 'User deleted !' }))
         .catch(error => res.status(400).json({ message: "Check id" }));
 }
+
+// create user
+// exports.createUser = (req, res, next) => {
+//     const user = new User({
+//         username: req.body.username,
+//         email: req.body.email,
+//         phone: req.body.phone,
+//         password: req.body.password
+//     });
+//     user.save()
+//         .then(() => res.status(201).json({ message: 'User added successfully !' }))
+//         .catch(error => res.status(400).json({ message: "Check id" }));
+// }
