@@ -7,7 +7,6 @@ var User = require('../models/user')
 
 const UserCtrl = require('../controllers/UserController');
 
-router.get('/', UserCtrl.getAllUser);
 
 router.get('/:id', UserCtrl.getUserbyid);
 
