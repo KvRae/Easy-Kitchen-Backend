@@ -1,6 +1,8 @@
 
 exports.notFound = (req, res, next) => {
-    res.status(404).json({ message: 'Page not found' });
+    const error = new Error(`Not Found - ${req.originalUrl}`);
+    res.status(404);
+    next(error);
 }
 
 exports.errorHandler = (error, req, res, next) => {

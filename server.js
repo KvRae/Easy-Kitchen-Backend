@@ -8,8 +8,7 @@ const errorHandler = require('./middleware/error-handler')
 const multer = require('multer')
 fs = require('fs-extra')
 app.use(bodyParser.urlencoded({ extended: true }))
-app.use(errorHandler.notFound)
-app.use(errorHandler.errorHandler)
+
 
 
 var storage = multer.diskStorage({
@@ -39,10 +38,10 @@ const ingredientRouter = require('./routes/ingredients')
 const recetteRouter = require('./routes/recettes')
 const categoryRouter = require('./routes/categories')
 const foodRouter = require('./routes/foods')
-
 const commentRouter = require('./routes/comments')
-
 const areaRouter = require('./routes/areas')
+
+
 
 
 
@@ -68,6 +67,9 @@ app.use('/api/food', foodRouter)
 app.use('/api/comments', commentRouter)
 
 app.use('/api/areas', areaRouter)
+
+app.use(errorHandler.notFound)
+app.use(errorHandler.errorHandler)
 
 
 // Upload Single File
