@@ -5,6 +5,7 @@ const app = express()
 const mongoose = require('mongoose')
 const errorHandler = require('./middleware/error-handler')
 const multer = require('multer')
+const cors = require('cors')
 fs = require('fs-extra')
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -43,7 +44,7 @@ const areaRouter = require('./routes/areas')
 
 
 
-
+app.use(cors())
 app.use(express.json())
 
 //app.use(multer({dest: 'images'}).single('image'))
