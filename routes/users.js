@@ -14,4 +14,6 @@ router.patch('/:id', UserCtrl.updateUser);
 
 router.delete('/:id', UserCtrl.deleteUser);
 
+router.put('/:id', UserCtrl.changePassword);
+
 module.exports = router;
