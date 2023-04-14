@@ -38,15 +38,39 @@ exports.deleteUser = (req, res, next) => {
         .catch(error => res.status(400).json({ message: "Check id" }));
 }
 
-// create user
-// exports.createUser = (req, res, next) => {
-//     const user = new User({
-//         username: req.body.username,
-//         email: req.body.email,
-//         phone: req.body.phone,
-//         password: req.body.password
-//     });
-//     user.save()
-//         .then(() => res.status(201).json({ message: 'User added successfully !' }))
-//         .catch(error => res.status(400).json({ message: "Check id" }));
-// }
+exports.changePassword = async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+    }
+    bcrypt.compare(oldPassword, user.password)
+        .then(valid => {
+            if (!valid) {
+                return res.status(401).json({ error: 'wrong password' });
+            }
+            bcrypt.hash(newPassword, 10, function (err, hashedPass) {
+                if (err) {
+                    res.json({
+                        error: err
+                    })
+                }
+                user.password = hashedPass;
+                user.save()
+                    .then(user => {
+                        res.json({
+                            message: 'Password updated successfully'
+                        })
+                    })
+                    .catch(error => {
+                        res.json({
+                            message: 'An error occurred'
+                        })
+                    })
+            })
+        })
+}
+
+
