@@ -1,0 +1,15 @@
+#MongoDB
+#DATABASE_URL=mongodb://localhost:27017/EasyKitchen
+DATABASE_URL=mongodb+srv://kvrae:efYyteZ8gcH0UHzL@kvraedbs.i1btn1q.mongodb.net/EasyKitchen?retryWrites=true&w=majority
+
+#GOOGLE_OAUTH
+GOOGLE_CLIENT_ID=19518545415-iul4jrbo219e1deuhrfft0u4nv5j1ol5.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+
+#GOOGLE_ACCOUNT
+GMAIL_USER=back.app.x@gmail.com
+GMAIL_PASSWORD=wrtzckeslmwbuxrm
+
+#JWT_SECRET_KEY
+RESET_PWD_KEY=accountactivatekey123456789
+JWT_SECRET=helloworld
