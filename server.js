@@ -62,7 +62,6 @@ app.use('/api/recettes', recetteRouter)
 
 app.use('/api/categories', categoryRouter)
 
-
 app.use('/api/food', foodRouter)
 
 app.use('/api/comments', commentRouter)

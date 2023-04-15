@@ -1,24 +1,22 @@
 const User = require('../models/user');
 const bcrypt = require('bcryptjs')
 
-
-
 //get user by id
-exports.getUserbyid = (req, res, next) => {
+exports.getUserbyid = (req, res) => {
     User.findOne({ _id: req.params.id })
         .then(user => res.status(200).json(user))
         .catch(error => res.status(404).json({ message: "user not found Check id" }));
 }
 
 //get all user
-exports.getAllUser = (req, res, next) => {
+exports.getAllUser = (req, res) => {
     User.find()
         .then(user => res.status(200).json(user))
         .catch(error => res.status(400).json({ error }));
 }
 
 //update user
-exports.updateUser = (req, res, next) => {
+exports.updateUser = (req, res) => {
     bcrypt.hash(req.body.password, 10, function (err, hashedPass) {
     const user = new User({
         _id: req.params.id,
@@ -32,21 +30,23 @@ exports.updateUser = (req, res, next) => {
 }
 
 //delete user
-exports.deleteUser = (req, res, next) => {
+exports.deleteUser = (req, res) => {
     User.deleteOne({ _id: req.params.id })
         .then(() => res.status(200).json({ message: 'User deleted !' }))
         .catch(error => res.status(400).json({ message: "Check id" }));
 }
 
+//change password
 exports.changePassword = async (req, res) => {
     const { oldPassword, newPassword } = req.body;
-    const { userId } = req.params;
-
-    const user = await User.findById(userId);
-    if (!user) {
+    const userId  = req.params.id;
+    if (!userId) {
         return res.status(401).json({ error: 'User not found' });
     }
-    bcrypt.compare(oldPassword, user.password)
+
+    const user = await User.findById(userId);
+
+    await bcrypt.compare(oldPassword, user.password)
         .then(valid => {
             if (!valid) {
                 return res.status(401).json({ error: 'wrong password' });

@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 
 
-
 const register = (req,res) => {
     bcrypt.hash(req.body.password, 10,function (err,hashedPass){
         if (err){
@@ -63,30 +62,28 @@ const login = (req, res) => {
 
 };
 
-const logout = (req, res, next) => {
+const logout = (req, res) => {
     res.status(200).json({ message: 'User logged out' });
 
 }
 
-const registerGoogle = (req, res, next) => {
+const registerGoogle = (req, res) => {
 
 }
 
-exports.forgotPassword = async (req, res) => {
-    const user = await User.findOne({email: req.body.email}).select("-password");
+const forgotPassword = async (req, res) => {
+    const user = await User.findOne({email: req.body.email})
 
     if (user) {
         const randomNumber = Math.floor(100000 + Math.random() * 900000);
-
-        // Token creation
-        const token = await generateResetToken(randomNumber)
+        const token = generateResetToken(randomNumber);
 
         const success = await sendEmail({
             from: process.env.GMAIL_USER,
             to: req.body.email,
-            subject: "Password reset - Kitebi",
+            subject: "Password reset - Code : " ,
             html:
-                "<h3>You have requested to reset your password</h3><p>Your reset code is : <b style='color : #22b7f8'>" +
+                "<h3>You have requested to reset your password</h3><p>Your reset code is : <b style='color : #f822c6'>" +
                 randomNumber +
                 "</b></p>",
         }).catch((error) => {
@@ -97,8 +94,10 @@ exports.forgotPassword = async (req, res) => {
         });
 
         if (success) {
+            console.log(token)
             return res.status(200).send({
-                message: "Reset email has been sent to : " + user.email, token
+                message: "Reset email has been sent to : " + user.email+"with code" +randomNumber,
+                token: token
             })
         } else {
             return res.status(500).send({
@@ -110,25 +109,22 @@ exports.forgotPassword = async (req, res) => {
     }
 };
 
-exports.verifyResetCode = async (req, res) => {
-    const {typedResetCode} = req.body;
+const verifyResetCode = async (req, res) => {
+    const {resetCode, token} = req.body;
 
-    let openToken
     try {
-        openToken = jwt.verify(req.body.token, process.env.JWT_SECRET, {}, {});
-    } catch (e) {
-        console.log(e)
-        return res.status(500).send({message: "Error, could not decrypt token"});
-    }
-
-    if (String(openToken.resetCode) === typedResetCode) {
-        res.status(200).send({message: "Success"});
-    } else {
-        res.status(403).send({message: "Incorrect reset code"});
+        const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.resetCode !== resetCode) {
+            return res.status(200).send({message: "Success"});
+        } else {
+            return res.status(403).send({message: "Invalid reset code"});
+        }
+    } catch (error) {
+        return res.status(500).send({error});
     }
 }
 
-exports.resetPassword = async (req, res) => {
+const resetPassword = async (req, res) => {
     const {
         email,
         password,
@@ -148,17 +144,6 @@ exports.resetPassword = async (req, res) => {
     }
 }
 
-
-// UTILITIES FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-function generateUserToken(user) {
-    return jwt.sign(
-        {user}, process.env.JWT_SECRET, {
-            expiresIn: "100000000", // in Milliseconds (3600000 = 1 hour)
-        }, {}
-    )
-}
-
 function generateResetToken(resetCode) {
     return jwt.sign(
         {resetCode},
@@ -166,20 +151,6 @@ function generateResetToken(resetCode) {
             expiresIn: "100000000", // in Milliseconds (3600000 = 1 hour)
         }, {}
     )
-}
-
-async function doSendConfirmationEmail(email, token, protocol) {
-    let port = process.env.PORT || 5000
-
-    await sendEmail({
-        from: process.env.GMAIL_USER,
-        to: email,
-        subject: "Confirm your email",
-        html:
-            "<h3>Please confirm your email using this </h3><a href='" +
-            protocol + "://" + os.hostname() + ":" + port + "/auth/confirmation/" + token +
-            "'>Link</a>",
-    })
 }
 
 async function sendEmail(mailOptions) {
@@ -214,4 +185,4 @@ async function sendEmail(mailOptions) {
 }
 
 
-module.exports = { register,login}
+module.exports = { register,login,logout,registerGoogle,forgotPassword,verifyResetCode,resetPassword }
