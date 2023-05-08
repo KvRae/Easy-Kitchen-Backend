@@ -36,9 +36,13 @@ const recetteSchema = new mongoose.Schema({
 
     dislikes:{type:Number,default:0},
 
-    usersLiked:[{type:schema.Types.ObjectId,ref:"User"}],
+    usersLiked:[{
+        type:schema.Types.ObjectId,
+        ref:"User"}],
 
-    usersDisliked:[{type:schema.Types.ObjectId,ref:"User"}],
+    usersDisliked:[{
+        type:schema.Types.ObjectId,
+        ref:"User"}],
 
     comments: [{
         type: schema.Types.ObjectId,
@@ -46,6 +50,7 @@ const recetteSchema = new mongoose.Schema({
     user: {
          type: schema.Types.ObjectId,
           ref: "User" },
+          
     username:{
         type:String,
         required:true

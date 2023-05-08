@@ -16,7 +16,7 @@ const register = (req,res) => {
             username: req.body.username,
             email: req.body.email,
             password: hashedPass,
-            phone: req.body.phone
+            phone: req.body.phone,
         })
         user.save()
             .then(user => {
@@ -49,7 +49,14 @@ const login = (req, res) => {
                     }
                     res.status(200).json({
                         user: user,
-                        token: jwt.sign({ userId: user._id },
+                        token: jwt.sign({ userId: user._id,
+                            username: user.username,
+                            email: user.email,
+                            phone: user.phone,
+                            image:user.image,
+                            recettes: user.recettes,
+                            comments: user.comments
+                         },
                             'RANDOM_TOKEN_SECRET', { expiresIn: '24h' }
                         )
 
@@ -75,8 +82,9 @@ const forgotPassword = async (req, res) => {
     const user = await User.findOne({email: req.body.email})
 
     if (user) {
-        const randomNumber = Math.floor(100000 + Math.random() * 900000);
-        const token = generateResetToken(randomNumber);
+ //       const randomNumber = Math.floor(100000 + Math.random() * 900000);
+        const randomNumber = 91547
+ const token = generateResetToken(randomNumber);
 
         const success = await sendEmail({
             from: process.env.GMAIL_USER,

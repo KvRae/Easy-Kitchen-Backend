@@ -1,7 +1,7 @@
 const recette = require("../models/recette");
 var mongoose = require('mongoose');
 const user = require("../models/user");
-
+const path = require('path');
 
 
 // get all foods
@@ -288,3 +288,36 @@ exports.delete = (req, res, next) => {
         .then(() => res.status(200).json({ message: 'recette deleted !' }))
         .catch(error => res.status(400).json({ message: "Check id" }));
 }
+
+exports.uploadImage = async (req, res) => {
+    const { recetteId } = req.params;
+  
+    if (req.file && req.file.path) {
+      const fileUrl = path.basename(req.file.path);
+      console.log("image path",fileUrl)
+
+      const fullFileUrl = `http://localhost:3000/api/recettes/image/${recetteId}/${fileUrl}`
+      const updatedRecette = await recette.findByIdAndUpdate(recetteId, {
+        image: fullFileUrl
+      });
+  
+      return res.json({
+        status: "ok",
+        success: true,
+        url: fullFileUrl,
+        message:'Image has been uploaded successfully',
+        updatedRecette: updatedRecette,
+      });
+    } else {
+      return res.status(400).json({
+        status: "error",
+        message: "File not found"
+      });
+    }
+  };
+  
+  exports.getImage = async (req, res) => {
+    const {recetteId,imageName } = req.params;
+
+    res.sendFile(`/Users/imac-1/Desktop/khabthani/backend/Rest-Api-ME-N/uploads/${recetteId}/${imageName}`);
+  };
