@@ -16,7 +16,7 @@ const register = (req,res) => {
             username: req.body.username,
             email: req.body.email,
             password: hashedPass,
-            phone: req.body.phone
+            phone: req.body.phone,
         })
         user.save()
             .then(user => {
@@ -29,7 +29,7 @@ const register = (req,res) => {
             .catch(err => {
                 res.json({
                     message: 'User already created with this credentials!'
-                })
+                }) 
             })
     })
 
@@ -49,7 +49,14 @@ const login = (req, res) => {
                     }
                     res.status(200).json({
                         user: user,
-                        token: jwt.sign({ userId: user._id },
+                        token: jwt.sign({ userId: user._id,
+                            username: user.username,
+                            email: user.email,
+                            phone: user.phone,
+                            image:user.image,
+                            recettes: user.recettes,
+                            comments: user.comments
+                         },
                             'RANDOM_TOKEN_SECRET', { expiresIn: '24h' }
                         )
 
@@ -67,7 +74,7 @@ const logout = (req, res) => {
 
 }
 
-const registerGoogle = (req, res) => {
+const loginWithGoogle = (req, res) => {
 
 }
 
@@ -75,17 +82,65 @@ const forgotPassword = async (req, res) => {
     const user = await User.findOne({email: req.body.email})
 
     if (user) {
-        const randomNumber = Math.floor(100000 + Math.random() * 900000);
-        const token = generateResetToken(randomNumber);
+ //       const randomNumber = Math.floor(100000 + Math.random() * 900000);
+        const randomNumber = 91547
+ const token = generateResetToken(randomNumber);
 
         const success = await sendEmail({
             from: process.env.GMAIL_USER,
             to: req.body.email,
             subject: "Password reset - Code : " ,
             html:
-                "<h3>You have requested to reset your password</h3><p>Your reset code is : <b style='color : #f822c6'>" +
-                randomNumber +
-                "</b></p>",
+                `<!DOCTYPE html>
+                <html>
+                <head>
+                  <title>Email Template</title>
+                  <style type="text/css">
+                    @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700');
+                  </style>
+                </head>
+                <body style="margin: 0; padding: 0; background-color: #fafbfc;">
+                  <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+                    <tr>
+                      <td align="center" bgcolor="#fafbfc" style="padding: 20px;">
+                        <img src="" width="125" style="display: block; padding: 25px;" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td bgcolor="#fff" style="padding: 20px;">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                          <tr>
+                            <td style="font-family: 'Open Sans', sans-serif; font-size: 16px; text-align: center; padding: 10px 25px;">
+                              <span>Hello, ${user.username}</span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="font-family: 'Open Sans', sans-serif; font-size: 16px; text-align: center; padding: 10px 25px;">
+                              Please use the verification code below on the easy kitchen app:
+                            </td>
+                          </tr>
+                          <tr>
+                            <td bgcolor="#20c997" style="font-family: 'Open Sans', sans-serif; font-size: 24px; font-weight: bold; text-align: center; padding: 10px 25px;">
+                              ${randomNumber}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="font-family: 'Open Sans', sans-serif; font-size: 16px; text-align: center; padding: 10px 25px;">
+                              If you didn't request this, you can ignore this email or let us know.
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="font-family: 'Open Sans', sans-serif; font-size: 16px; text-align: center; padding: 10px 25px;">
+                              Thanks! <br />Easy Kitchen Team.
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+                `
         }).catch((error) => {
             console.log(error)
             return res.status(500).send({
@@ -185,4 +240,4 @@ async function sendEmail(mailOptions) {
 }
 
 
-module.exports = { register,login,logout,registerGoogle,forgotPassword,verifyResetCode,resetPassword }
+module.exports = { register,login,logout,loginWithGoogle,forgotPassword,verifyResetCode,resetPassword }
