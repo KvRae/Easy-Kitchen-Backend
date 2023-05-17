@@ -29,7 +29,7 @@ const register = (req,res) => {
             .catch(err => {
                 res.json({
                     message: 'User already created with this credentials!'
-                })
+                }) 
             })
     })
 
