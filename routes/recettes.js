@@ -49,9 +49,9 @@ router.get('/:id/recettes', RecetteCtrl.getAllByUser);
 
 router.post('/', RecetteCtrl.add);
 
-router.patch('/:id/like',RecetteCtrl.likeRecette)
+router.post('/:id/like',RecetteCtrl.likeRecette)
 
-router.patch('/:id/dislike',RecetteCtrl.dislikeRecette)
+router.post('/:id/dislike',RecetteCtrl.dislikeRecette)
 
 
 

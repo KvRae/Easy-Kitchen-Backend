@@ -46,45 +46,47 @@ exports.getAllByRecette = async (req, res,next) => {
     .catch(error => res.status(404).json({ message: "comment not found Check id" }));
 
 }
+
 //like recette
 exports.likeRecette = (req, res, next) => {
+    console.log(req.body.userId)
     recette.findOne({ _id: req.params.id })
     .then((obj) =>{
         //LIKE
-        if (!obj.usersLiked.includes(req.body.id) ){
-            if(obj.usersDisliked.includes(req.body.id)){
+        if (!obj.usersLiked.includes(req.body.userId) ){
+            if(obj.usersDisliked.includes(req.body.userId)){
                 recette.updateOne({_id: req.params.id },
                     {
                     $inc:{dislikes:-1},
-                   $pull:{usersDisliked:req.body.id},
+                   $pull:{usersDisliked:req.body.userId},
 
                 }).then(()=>{
 
                     recette.updateOne({_id: req.params.id },
                         {
                         $inc :{likes:1},
-                        $push:{usersLiked:req.body.id} 
+                        $push:{usersLiked:req.body.userId} 
                     }).then(()=>res.status(201).json({message:"Recette like +1 dislike -1"})).catch(error=>res.status(404).json({error}));
                 }).catch(error=>res.status(404).json({error}));;
                 
 
                 
             }else
-            if(!obj.usersDisliked.includes(req.body.id)){
+            if(!obj.usersDisliked.includes(req.body.userId)){
                 recette.updateOne({_id: req.params.id },{
                     $inc :{likes:1},
-                    $push:{usersLiked:req.body.id}
+                    $push:{usersLiked:req.body.userId}
                 }).then(()=>res.status(201).json({message:"Recette like +1"})).catch(error=>res.status(404).json({error}));
             }
 
              
 
         }
-        if (obj.usersLiked.includes(req.body.id) ){
+        if (obj.usersLiked.includes(req.body.userId) ){
 
             recette.updateOne({_id: req.params.id },{
                $inc :{likes:-1},
-               $pull:{usersLiked:req.body.id}
+               $pull:{usersLiked:req.body.userId}
            }).then(()=>res.status(201).json({message:"Recette like -1"})).catch(error=>res.status(404).json({error}));
        }
 
@@ -98,11 +100,11 @@ exports.dislikeRecette = async (req, res, next) => {
     recette.findOne({ _id: req.params.id })
     .then((obj) =>{
 //DISLIKE
-if (!obj.usersDisliked.includes(req.body.id) ){
-    if (obj.usersLiked.includes(req.body.id)){
+if (!obj.usersDisliked.includes(req.body.userId) ){
+    if (obj.usersLiked.includes(req.body.userId)){
         recette.updateOne({_id: req.params.id },{
             $inc:{likes:-1},
-            $pull:{usersLiked:req.body.id},
+            $pull:{usersLiked:req.body.userId},
 
 
         }).then(
@@ -110,7 +112,7 @@ if (!obj.usersDisliked.includes(req.body.id) ){
             recette.updateOne({_id: req.params.id },{
 
                 $inc :{dislikes:1},
-                $push:{usersDisliked:req.body.id}
+                $push:{usersDisliked:req.body.userId}
     
             }).then(()=>res.status(201).json({message:"Recette dislike +1 like -1"})).catch(error=>res.status(404).json({error}));
         }
@@ -119,20 +121,20 @@ if (!obj.usersDisliked.includes(req.body.id) ){
         
     
     }else
-    if(!obj.usersLiked.includes(req.body.id)){
+    if(!obj.usersLiked.includes(req.body.userId)){
         recette.updateOne({_id: req.params.id },{
             $inc :{dislikes:1},
-            $push:{usersDisliked:req.body.id}
+            $push:{usersDisliked:req.body.userId}
         }).then(()=>res.status(201).json({message:"Recette dislike +1"})).catch(error=>res.status(404).json({error}));
     
     
     }
 
 }
-     if (obj.usersDisliked.includes(req.body.id) ){
+     if (obj.usersDisliked.includes(req.body.userId) ){
     recette.updateOne({_id: req.params.id },{
        $inc :{dislikes:-1},
-       $pull:{usersDisliked: req.body.id}
+       $pull:{usersDisliked: req.body.userId}
    }).then(()=>res.status(201).json({message:"Recette dislike -1"})).catch(error=>res.status(404).json({error}));
 }
 
@@ -161,15 +163,17 @@ exports.add = async (req, res) => {
         strMeasure8,strMeasure9,strMeasure10,strMeasure11,strMeasure12,strMeasure13,strMeasure14,
         strMeasure15,strMeasure16,strMeasure17,strMeasure18,strMeasure19,strMeasure20} = req.body;
 
+
     const newRecette = new recette()
     newRecette.name = name
     newRecette.description = description
-    newRecette.image = image
+
+    
     newRecette.isBio = isBio
     newRecette.duration = duration
     newRecette.person = person
     newRecette.difficulty = difficulty
-    newRecette.user= userId
+    newRecette.userId= userId
     newRecette.username=username
     newRecette.strIngredient1=strIngredient1,
     newRecette.strIngredient2=strIngredient2,
