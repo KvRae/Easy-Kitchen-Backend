@@ -5,28 +5,27 @@ const schema = mongoose.Schema;
 const recetteSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true
     },
     description: {
         type: String,
-        required: true,
     },
     image: {
         type: String,
-        required: true
-
+        default:"http://localhost:3000/api/recettes/image/recipe/recipe.png",
+        unique:false,
+        required:false
     },
     isBio: {
         type: Boolean,
-        required: true
     },
     duration:{
         type:Number,
-        required:true
     },
     person:{
         type:Number,
-        required:true
+    },
+    userId:{
+        type:String,
     },
     difficulty:{
         type:String,
@@ -36,16 +35,21 @@ const recetteSchema = new mongoose.Schema({
 
     dislikes:{type:Number,default:0},
 
-    usersLiked:[{type:schema.Types.ObjectId,ref:"User"}],
+    usersLiked:[{
+        type:schema.Types.ObjectId,
+        ref:"User"}],
 
-    usersDisliked:[{type:schema.Types.ObjectId,ref:"User"}],
+    usersDisliked:[{
+        type:schema.Types.ObjectId,
+        ref:"User"}],
 
     comments: [{
         type: schema.Types.ObjectId,
          ref: "Comment" }],
-    user: {
+/*    user: {
          type: schema.Types.ObjectId,
           ref: "User" },
+  */        
     username:{
         type:String,
         required:true
@@ -188,5 +192,4 @@ const recetteSchema = new mongoose.Schema({
           }
 
 }, {timestamps: true})
-
 module.exports = mongoose.model('Recette', recetteSchema)

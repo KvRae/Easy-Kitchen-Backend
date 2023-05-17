@@ -1,7 +1,7 @@
 const recette = require("../models/recette");
 var mongoose = require('mongoose');
 const user = require("../models/user");
-
+const path = require('path');
 
 
 // get all foods
@@ -46,45 +46,47 @@ exports.getAllByRecette = async (req, res,next) => {
     .catch(error => res.status(404).json({ message: "comment not found Check id" }));
 
 }
+
 //like recette
 exports.likeRecette = (req, res, next) => {
+    console.log(req.body.userId)
     recette.findOne({ _id: req.params.id })
     .then((obj) =>{
         //LIKE
-        if (!obj.usersLiked.includes(req.body.id) ){
-            if(obj.usersDisliked.includes(req.body.id)){
+        if (!obj.usersLiked.includes(req.body.userId) ){
+            if(obj.usersDisliked.includes(req.body.userId)){
                 recette.updateOne({_id: req.params.id },
                     {
                     $inc:{dislikes:-1},
-                   $pull:{usersDisliked:req.body.id},
+                   $pull:{usersDisliked:req.body.userId},
 
                 }).then(()=>{
 
                     recette.updateOne({_id: req.params.id },
                         {
                         $inc :{likes:1},
-                        $push:{usersLiked:req.body.id} 
+                        $push:{usersLiked:req.body.userId} 
                     }).then(()=>res.status(201).json({message:"Recette like +1 dislike -1"})).catch(error=>res.status(404).json({error}));
                 }).catch(error=>res.status(404).json({error}));;
                 
 
                 
             }else
-            if(!obj.usersDisliked.includes(req.body.id)){
+            if(!obj.usersDisliked.includes(req.body.userId)){
                 recette.updateOne({_id: req.params.id },{
                     $inc :{likes:1},
-                    $push:{usersLiked:req.body.id}
+                    $push:{usersLiked:req.body.userId}
                 }).then(()=>res.status(201).json({message:"Recette like +1"})).catch(error=>res.status(404).json({error}));
             }
 
              
 
         }
-        if (obj.usersLiked.includes(req.body.id) ){
+        if (obj.usersLiked.includes(req.body.userId) ){
 
             recette.updateOne({_id: req.params.id },{
                $inc :{likes:-1},
-               $pull:{usersLiked:req.body.id}
+               $pull:{usersLiked:req.body.userId}
            }).then(()=>res.status(201).json({message:"Recette like -1"})).catch(error=>res.status(404).json({error}));
        }
 
@@ -98,11 +100,11 @@ exports.dislikeRecette = async (req, res, next) => {
     recette.findOne({ _id: req.params.id })
     .then((obj) =>{
 //DISLIKE
-if (!obj.usersDisliked.includes(req.body.id) ){
-    if (obj.usersLiked.includes(req.body.id)){
+if (!obj.usersDisliked.includes(req.body.userId) ){
+    if (obj.usersLiked.includes(req.body.userId)){
         recette.updateOne({_id: req.params.id },{
             $inc:{likes:-1},
-            $pull:{usersLiked:req.body.id},
+            $pull:{usersLiked:req.body.userId},
 
 
         }).then(
@@ -110,7 +112,7 @@ if (!obj.usersDisliked.includes(req.body.id) ){
             recette.updateOne({_id: req.params.id },{
 
                 $inc :{dislikes:1},
-                $push:{usersDisliked:req.body.id}
+                $push:{usersDisliked:req.body.userId}
     
             }).then(()=>res.status(201).json({message:"Recette dislike +1 like -1"})).catch(error=>res.status(404).json({error}));
         }
@@ -119,20 +121,20 @@ if (!obj.usersDisliked.includes(req.body.id) ){
         
     
     }else
-    if(!obj.usersLiked.includes(req.body.id)){
+    if(!obj.usersLiked.includes(req.body.userId)){
         recette.updateOne({_id: req.params.id },{
             $inc :{dislikes:1},
-            $push:{usersDisliked:req.body.id}
+            $push:{usersDisliked:req.body.userId}
         }).then(()=>res.status(201).json({message:"Recette dislike +1"})).catch(error=>res.status(404).json({error}));
     
     
     }
 
 }
-     if (obj.usersDisliked.includes(req.body.id) ){
+     if (obj.usersDisliked.includes(req.body.userId) ){
     recette.updateOne({_id: req.params.id },{
        $inc :{dislikes:-1},
-       $pull:{usersDisliked: req.body.id}
+       $pull:{usersDisliked: req.body.userId}
    }).then(()=>res.status(201).json({message:"Recette dislike -1"})).catch(error=>res.status(404).json({error}));
 }
 
@@ -161,15 +163,17 @@ exports.add = async (req, res) => {
         strMeasure8,strMeasure9,strMeasure10,strMeasure11,strMeasure12,strMeasure13,strMeasure14,
         strMeasure15,strMeasure16,strMeasure17,strMeasure18,strMeasure19,strMeasure20} = req.body;
 
+
     const newRecette = new recette()
     newRecette.name = name
     newRecette.description = description
-    newRecette.image = image
+
+    
     newRecette.isBio = isBio
     newRecette.duration = duration
     newRecette.person = person
     newRecette.difficulty = difficulty
-    newRecette.user= userId
+    newRecette.userId= userId
     newRecette.username=username
     newRecette.strIngredient1=strIngredient1,
     newRecette.strIngredient2=strIngredient2,
@@ -288,3 +292,36 @@ exports.delete = (req, res, next) => {
         .then(() => res.status(200).json({ message: 'recette deleted !' }))
         .catch(error => res.status(400).json({ message: "Check id" }));
 }
+
+exports.uploadImage = async (req, res) => {
+    const { recetteId } = req.params;
+  
+    if (req.file && req.file.path) {
+      const fileUrl = path.basename(req.file.path);
+      console.log("image path",fileUrl)
+
+      const fullFileUrl = `http://localhost:3000/api/recettes/image/${recetteId}/${fileUrl}`
+      const updatedRecette = await recette.findByIdAndUpdate(recetteId, {
+        image: fullFileUrl
+      });
+  
+      return res.json({
+        status: "ok",
+        success: true,
+        url: fullFileUrl,
+        message:'Image has been uploaded successfully',
+        updatedRecette: updatedRecette,
+      });
+    } else {
+      return res.status(400).json({
+        status: "error",
+        message: "File not found"
+      });
+    }
+  };
+  
+  exports.getImage = async (req, res) => {
+    const {recetteId,imageName } = req.params;
+
+    res.sendFile(`/Users/imac-1/Desktop/khabthani/backend/Rest-Api-ME-N/uploads/${recetteId}/${imageName}`);
+  };

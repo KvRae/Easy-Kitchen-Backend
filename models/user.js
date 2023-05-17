@@ -5,7 +5,8 @@ const schema = mongoose.Schema;
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     email: {
         type: String,
@@ -22,6 +23,10 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
         minlength: 8,
+    },
+    image:{
+        type:String,
+        default:'http://localhost:3000/api/users/image/avatar/avatar.jpg'
     },
     recettes: [{ type: schema.Types.ObjectId, ref: "Recette" }],
     comments:[{ type:schema.Types.ObjectId, ref:"Comment"}]

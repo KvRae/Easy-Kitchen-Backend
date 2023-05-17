@@ -3,10 +3,12 @@ const bodyParser = require('body-parser')
 const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
-
+const errorHandler = require('./middleware/error-handler')
 const multer = require('multer')
+const cors = require('cors')
 fs = require('fs-extra')
 app.use(bodyParser.urlencoded({ extended: true }))
+
 
 
 var storage = multer.diskStorage({
@@ -23,11 +25,9 @@ var upload = multer({ storage: storage })
 
 
 
-mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true })
+mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
 const db = mongoose.connection
-
-
-
+mongoose.set('useCreateIndex', true);
 db.on('error', (error) => console.error(error))
 db.once('open', () => console.log('Connected to Database'))
 
@@ -39,13 +39,13 @@ const ingredientRouter = require('./routes/ingredients')
 const recetteRouter = require('./routes/recettes')
 const categoryRouter = require('./routes/categories')
 const foodRouter = require('./routes/foods')
-
 const commentRouter = require('./routes/comments')
-
 const areaRouter = require('./routes/areas')
 
 
 
+
+app.use(cors())
 app.use(express.json())
 
 //app.use(multer({dest: 'images'}).single('image'))
@@ -62,12 +62,14 @@ app.use('/api/recettes', recetteRouter)
 
 app.use('/api/categories', categoryRouter)
 
-
 app.use('/api/food', foodRouter)
 
 app.use('/api/comments', commentRouter)
 
 app.use('/api/areas', areaRouter)
+
+app.use(errorHandler.notFound)
+app.use(errorHandler.errorHandler)
 
 
 // Upload Single File
@@ -86,4 +88,4 @@ app.post('/api/uploadfile', upload.single('myFile'), (req, res, next) => {
   })
 
 
-app.listen(3000, () => console.log('Server Started'))
+app.listen(3000, () => console.log('Server Started on port 3000'))
