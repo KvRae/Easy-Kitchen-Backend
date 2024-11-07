@@ -13,6 +13,7 @@
     "dependencies": {
         "bcryptjs": "^2.4.3",
         "cors": "^2.8.5",
+        "easy-kitchen": "file:",
         "express": "^4.16.4",
         "fs-extra": "^11.1.0",
         "jsonwebtoken": "^9.0.0",

@@ -4,70 +4,123 @@ const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 
 
-const register = (req,res) => {
-    bcrypt.hash(req.body.password, 10,function (err,hashedPass){
-        if (err){
-            res.json({
-                error: err
-            })
-        }
+const register = (req, res) => {
+    const { username, email, password, phone } = req.body;
 
-        let user = new User({
-            username: req.body.username,
-            email: req.body.email,
-            password: hashedPass,
-            phone: req.body.phone,
+    // Validate required fields
+    if (!username || !email || !password || !phone) {
+        return res.status(400).json({ error: 'All fields are required (username, email, password, phone)' });
+    }
+
+    // Check if the password is a valid string and not undefined
+    if (typeof password !== 'string' || password.trim() === '') {
+        return res.status(400).json({ error: 'Password must be a valid string' });
+    }
+
+    // Check if username or email already exists in the database
+    User.findOne({ $or: [{ username }, { email }] })
+        .then(existingUser => {
+            if (existingUser) {
+                return res.status(400).json({ error: 'User already exists with this username or email' });
+            }
+
+            // Hash the password
+            bcrypt.hash(password, 10, (err, hashedPass) => {
+                if (err) {
+                    console.error('Error hashing password:', err);
+                    return res.status(500).json({ error: 'Internal server error while hashing password' });
+                }
+
+                // Create the new user
+                const user = new User({
+                    username,
+                    email,
+                    password: hashedPass,
+                    phone
+                });
+
+                // Save the user to the database
+                user.save()
+                    .then(newUser => {
+                        // Don't send sensitive data like the hashed password
+                        res.status(201).json({
+                            message: 'Account created successfully',
+                            user: {
+                                username: newUser.username,
+                                email: newUser.email,
+                                phone: newUser.phone
+                            }
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Error saving user:', err);
+                        res.status(500).json({ error: 'An error occurred while saving the user' });
+                    });
+            });
         })
-        user.save()
-            .then(user => {
-                res.json({
-                    user,
-                    message : "Account created successfully"
+        .catch(err => {
+            console.error('Error checking for existing user:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        });
+};
 
-                })
-            })
-            .catch(err => {
-                res.json({
-                    message: 'User already created with this credentials!'
-                }) 
-            })
-    })
 
-}
 
 const login = (req, res) => {
-    User.findOne({ username: req.body.username })
+    const { username, email, password } = req.body;
+
+ 
+    const loginField = email ? { email } : { username };
+
+    User.findOne(loginField)
         .then(user => {
             if (!user) {
-                return res.status(401).json({ error: 'wrong username ', error });
+                return res.status(401).json({ error: 'Incorrect username or email, or password' });
             }
-            bcrypt.compare(req.body.password, user.password)
+
+            // Compare the password with the stored hash
+            bcrypt.compare(password, user.password)
                 .then(valid => {
-                    console.log(req.body.password + " " + user.password);
                     if (!valid) {
-                        return res.status(401).json({ error: 'wrong password' });
+                        return res.status(401).json({ error: 'Incorrect username or email, or password' });
                     }
-                    res.status(200).json({
-                        user: user,
-                        token: jwt.sign({ userId: user._id,
+
+                    const token = jwt.sign(
+                        { 
+                            userId: user._id,
                             username: user.username,
                             email: user.email,
                             phone: user.phone,
-                            image:user.image,
+                            image: user.image,
                             recettes: user.recettes,
                             comments: user.comments
-                         },
-                            'RANDOM_TOKEN_SECRET', { expiresIn: '24h' }
-                        )
+                        },
+                        process.env.JWT_SECRET || 'RANDOM_TOKEN_SECRET',
+                        { expiresIn: '24h' }
+                    );
 
+                    return res.status(200).json({
+                        message: 'Login successful',
+                        user: {
+                            username: user.username,
+                            email: user.email,
+                            phone: user.phone,
+                            image: user.image,
+                        },
+                        token: token
                     });
                 })
-                .catch(error => res.status(500).json({ error }));
+                .catch(error => {
+                    console.error('Error comparing password:', error);
+                    return res.status(500).json({ error: 'Internal server error' });
+                });
         })
-        .catch(error => res.status(500).json({ error }));
-
-
+        .catch(error => {
+            console.error('Error finding user:', error);
+            return res.status(500).json({ error: 'Internal server error' });
+        });
 };
+
 
 const logout = (req, res) => {
     res.status(200).json({ message: 'User logged out' });
@@ -82,8 +135,7 @@ const forgotPassword = async (req, res) => {
     const user = await User.findOne({email: req.body.email})
 
     if (user) {
- //       const randomNumber = Math.floor(100000 + Math.random() * 900000);
-        const randomNumber = 91547
+        const randomNumber = Math.floor(100000 + Math.random() * 900000);
  const token = generateResetToken(randomNumber);
 
         const success = await sendEmail({
