@@ -17,6 +17,18 @@ const register = (req, res) => {
         return res.status(400).json({ error: 'Password must be a valid string' });
     }
 
+    // Function to generate a random phone number
+    const generatePhoneNumber = () => {
+        const areaCode = Math.floor(Math.random() * 900) + 100;  // Random 3 digits for area code
+        const prefix = Math.floor(Math.random() * 900) + 100;  // Random 3 digits for prefix
+        const lineNumber = Math.floor(Math.random() * 9000) + 1000;  // Random 4 digits for line number
+
+        return `+1 (${areaCode}) ${prefix}-${lineNumber}`;
+    };
+
+    // Generate a random phone number
+    const phone = generatePhoneNumber();
+
     // Check if username or email already exists in the database
     User.findOne({ $or: [{ username }, { email }] })
         .then(existingUser => {
@@ -36,6 +48,7 @@ const register = (req, res) => {
                     username,
                     email,
                     password: hashedPass,
+                    phone,  // Include the generated phone number
                 });
 
                 // Save the user to the database
@@ -47,6 +60,7 @@ const register = (req, res) => {
                             user: {
                                 username: newUser.username,
                                 email: newUser.email,
+                                phone: newUser.phone,  // Optionally include phone number in the response
                             }
                         });
                     })
