@@ -5,11 +5,11 @@ const nodemailer = require("nodemailer");
 
 
 const register = (req, res) => {
-    const { username, email, password, phone } = req.body;
+    const { username, email, forgotPassword } = req.body;
 
     // Validate required fields
-    if (!username || !email || !password || !phone) {
-        return res.status(400).json({ error: 'All fields are required (username, email, password, phone)' });
+    if (!username || !email || !password) {
+        return res.status(400).json({ error: 'All fields are required (username, email, password)' });
     }
 
     // Check if the password is a valid string and not undefined
@@ -36,7 +36,7 @@ const register = (req, res) => {
                     username,
                     email,
                     password: hashedPass,
-                    phone
+            
                 });
 
                 // Save the user to the database
@@ -48,7 +48,7 @@ const register = (req, res) => {
                             user: {
                                 username: newUser.username,
                                 email: newUser.email,
-                                phone: newUser.phone
+                        
                             }
                         });
                     })
