@@ -14,4 +14,6 @@ router.post('/verify', AuthController.verifyResetCode)
 
 router.post('/reset', AuthController.resetPassword)
 
+router.post('/auth/google', AuthController.loginWithGoogle)
+
 module.exports = router

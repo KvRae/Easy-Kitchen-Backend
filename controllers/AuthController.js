@@ -2,6 +2,9 @@ const User = require('../models/user')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
+const { OAuth2Client } = require('google-auth-library');
+const CLIENT_ID = process.env.CLIENT_ID;
+const client = new OAuth2Client(CLIENT_ID);
 
 
 const register = (req, res) => {
@@ -140,24 +143,45 @@ const logout = (req, res) => {
 
 }
 
-const loginWithGoogle = (req, res) => {
+const loginWithGoogle = async (req, res) => {
+    const { idToken } = req.body;
 
-}
+    if (!idToken) {
+        return res.status(404).json({ message: 'idToken is missing' });
+    }
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: idToken,
+            audience: CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        if (payload) {
+            return res.status(200).json({ message: 'Authentication successful', user: payload });
+        } else {
+            return res.status(500).json({ message: 'Invalid token' });
+        }
+    } catch (error) {
+        console.error('Error verifying idToken:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
 
 const forgotPassword = async (req, res) => {
     const user = await User.findOne({email: req.body.email})
 
     if (user) {
         const randomNumber = Math.floor(100000 + Math.random() * 900000);
- const token = generateResetToken(randomNumber);
+        const token = generateResetToken(randomNumber);
 
         const success = await sendEmail({
             from: process.env.GMAIL_USER,
             to: req.body.email,
-            subject: "Password reset - Code : " ,
+            subject: "Easy kitchen - Password Reset Code" ,
             html:
                 `<!DOCTYPE html>
-                <html>
+                <html lang="">
                 <head>
                   <title>Email Template</title>
                   <style type="text/css">
@@ -168,7 +192,7 @@ const forgotPassword = async (req, res) => {
                   <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
                     <tr>
                       <td align="center" bgcolor="#fafbfc" style="padding: 20px;">
-                        <img src="" width="125" style="display: block; padding: 25px;" />
+                        <img src="" width="125" style="display: block; padding: 25px;"  alt=""/>
                       </td>
                     </tr>
                     <tr>
@@ -216,7 +240,7 @@ const forgotPassword = async (req, res) => {
         if (success) {
             console.log(token)
             return res.status(200).send({
-                message: "Reset email has been sent to : " + user.email+"with code" +randomNumber,
+                message: "Reset email has been sent to : " + user.email,
                 token: token
             })
         } else {
