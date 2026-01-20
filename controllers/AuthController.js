@@ -169,16 +169,27 @@ const loginWithGoogle = async (req, res) => {
 };
 
 const forgotPassword = async (req, res) => {
-    const user = await User.findOne({email: req.body.email})
+    const { email } = req.body;
 
-    if (user) {
+    // Validate email input
+    if (!email) {
+        return res.status(400).send({message: "Email is required"});
+    }
+
+    try {
+        const user = await User.findOne({email});
+
+        if (!user) {
+            return res.status(404).send({message: "User does not exist"});
+        }
+
         const randomNumber = Math.floor(100000 + Math.random() * 900000);
         const token = generateResetToken(randomNumber);
 
         const success = await sendEmail({
             from: process.env.GMAIL_USER,
-            to: req.body.email,
-            subject: "Easy kitchen - Password Reset Code" ,
+            to: email,
+            subject: "Easy kitchen - Password Reset Code",
             html:
                 `<!DOCTYPE html>
                 <html lang="">
@@ -230,102 +241,116 @@ const forgotPassword = async (req, res) => {
                 </body>
                 </html>
                 `
-        }).catch((error) => {
-            console.log(error)
-            return res.status(500).send({
-                message: "Error : email could not be sent"
-            })
         });
 
         if (success) {
-            console.log(token)
+            console.log("Reset token generated for user:", user.email);
             return res.status(200).send({
-                message: "Reset email has been sent to : " + user.email,
+                message: "Reset email has been sent to: " + user.email,
                 token: token
-            })
+            });
         } else {
             return res.status(500).send({
                 message: "Email could not be sent"
-            })
+            });
         }
-    } else {
-        return res.status(404).send({message: "User does not exist"});
+    } catch (error) {
+        console.error("Error in forgotPassword:", error);
+        return res.status(500).send({
+            message: "An error occurred while processing your request",
+            error: error.message
+        });
     }
 };
 
 const verifyResetCode = async (req, res) => {
     const {resetCode, token} = req.body;
 
+    if (!resetCode || !token) {
+        return res.status(400).send({message: "Reset code and token are required"});
+    }
+
     try {
-        const decoded = await jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.resetCode !== resetCode) {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Convert both to string for comparison to avoid type mismatch
+        if (String(decoded.resetCode) === String(resetCode)) {
             return res.status(200).send({message: "Success"});
         } else {
             return res.status(403).send({message: "Invalid reset code"});
         }
     } catch (error) {
-        return res.status(500).send({error});
+        return res.status(500).send({message: "Invalid or expired token", error: error.message});
     }
 }
 
 const resetPassword = async (req, res) => {
-    const {
-        email,
-        password,
-    } = req.body;
+    const { email, password } = req.body;
+
+    // Validate required fields
+    if (!email || !password) {
+        return res.status(400).send({message: "Email and password are required"});
+    }
+
+    // Validate password strength
+    if (typeof password !== 'string' || password.trim().length < 6) {
+        return res.status(400).send({message: "Password must be at least 6 characters long"});
+    }
 
     try {
-        await User.findOneAndUpdate({email},
+        // Check if user exists
+        const user = await User.findOne({email});
+        if (!user) {
+            return res.status(404).send({message: "User not found"});
+        }
+
+        // Update password
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await User.findOneAndUpdate(
+            {email},
             {
                 $set: {
-                    password: await bcrypt.hash(password, 10),
+                    password: hashedPassword,
                 },
             }
-        )
-        res.status(200).send({message: "Success"});
+        );
+
+        res.status(200).send({message: "Password reset successful"});
     } catch (error) {
-        res.status(500).send({error});
+        console.error('Error resetting password:', error);
+        res.status(500).send({message: "Error resetting password", error: error.message});
     }
 }
 
 function generateResetToken(resetCode) {
     return jwt.sign(
         {resetCode},
-        process.env.JWT_SECRET, {
-            expiresIn: "100000000", // in Milliseconds (3600000 = 1 hour)
-        }, {}
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "1h", // 1 hour - more secure than 100000000ms
+        }
     )
 }
 
 async function sendEmail(mailOptions) {
-    let transporter = await nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: process.env.GMAIL_USER,
-            pass: process.env.GMAIL_PASSWORD,
-        },
-    });
+    try {
+        let transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.GMAIL_USER,
+                pass: process.env.GMAIL_PASSWORD,
+            },
+        });
 
-    await transporter.verify(function (error) {
-        if (error) {
-            console.log(error);
-            console.log("Server not ready");
-        } else {
-            console.log("Server is ready to take our messages");
-        }
-    })
+        await transporter.verify();
+        console.log("Server is ready to take our messages");
 
-    await transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-            console.log(error);
-            return false;
-        } else {
-            console.log("Email sent: " + info.response);
-            return true;
-        }
-    });
-
-    return true
+        const info = await transporter.sendMail(mailOptions);
+        console.log("Email sent: " + info.response);
+        return true;
+    } catch (error) {
+        console.log("Email error:", error);
+        return false;
+    }
 }
 
 
