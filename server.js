@@ -6,10 +6,15 @@ const mongoose = require('mongoose')
 const errorHandler = require('./middleware/error-handler')
 const multer = require('multer')
 const cors = require('cors')
-fs = require('fs-extra')
+const fs = require('fs-extra')
+
+// Validate required environment variables
+if (!process.env.DATABASE_URL) {
+  console.error('Missing DATABASE_URL environment variable. Please set it in your .env file.');
+  process.exit(1);
+}
+
 app.use(bodyParser.urlencoded({ extended: true }))
-
-
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -22,15 +27,11 @@ var storage = multer.diskStorage({
 
 var upload = multer({ storage: storage })
 
-
-
-
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
 const db = mongoose.connection
 mongoose.set('useCreateIndex', true);
 db.on('error', (error) => console.error(error))
 db.once('open', () => console.log('Connected to Database'))
-
 
 //add routes variables
 const userRouter = require('./routes/users')
@@ -42,14 +43,10 @@ const foodRouter = require('./routes/foods')
 const commentRouter = require('./routes/comments')
 const areaRouter = require('./routes/areas')
 
-
-
-
 app.use(cors())
 app.use(express.json())
 
 //app.use(multer({dest: 'images'}).single('image'))
-
 
 // use routes
 app.use('/api/', authRoute)
@@ -88,5 +85,5 @@ app.post('/api/uploadfile', upload.single('myFile'), (req, res, next) => {
   })
 
 
-app.listen(3000, () => console.log('Server Started on port 3000'))
-
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => console.log(`Server Started on port ${PORT}`))

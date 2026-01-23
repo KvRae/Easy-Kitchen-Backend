@@ -1,8 +1,8 @@
 var express = require('express');
 var router = express.Router();
 const multer = require('multer');
-var recette = require('../models/recette');
 const RecetteCtrl = require('../controllers/RecetteController');
+const fs = require('fs');
 
 /* multer Configuration */
 const storage = multer.diskStorage({
@@ -42,9 +42,11 @@ router.get('/bio', RecetteCtrl.getAllBio);
 
 router.get('/:id', RecetteCtrl.getRecettebyid);
 
-router.get('/:id/comments', RecetteCtrl.getAllByRecette);
+// Updated to match renamed controller function
+router.get('/:id/comments', RecetteCtrl.getCommentsByRecette);
 
-router.get('/:id/recettes', RecetteCtrl.getAllByUser);
+// Updated to match renamed controller function
+router.get('/:id/recettes', RecetteCtrl.getRecettesByUser);
 
 
 router.post('/', RecetteCtrl.add);
