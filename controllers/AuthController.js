@@ -444,22 +444,27 @@ async function sendEmail(mailOptions) {
 
         const transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
+            port: 587,
+            secure: false,
             auth: {
                 user: process.env.GMAIL_USER,
                 pass: process.env.GMAIL_PASSWORD,
             },
-            connectionTimeout: 15000, // fail fast on network blocks
-            socketTimeout: 15000,
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000,
+            tls: {
+                rejectUnauthorized: false
+            }
         });
 
-        await transporter.verify();
+        // Skip verification and send directly
         const info = await transporter.sendMail(mailOptions);
         console.log('Email sent successfully:', info.response);
         return true;
     } catch (error) {
         console.error('Error sending email:', error.message);
+        console.error('Full error:', error);
         return false;
     }
 }
