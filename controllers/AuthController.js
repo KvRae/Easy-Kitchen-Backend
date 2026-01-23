@@ -130,32 +130,81 @@ const login = async (req, res) => {
 
 
 const logout = (req, res) => {
-    res.status(200).json({ message: 'User logged out' });
-
+    return res.status(200).json({ message: 'User logged out successfully' });
 }
 
 const loginWithGoogle = async (req, res) => {
     const { idToken } = req.body;
 
+    // Validate input
     if (!idToken) {
-        return res.status(404).json({ message: 'idToken is missing' });
+        return res.status(400).json({ error: 'idToken is required' });
     }
 
     try {
+        // Verify the token with Google
         const ticket = await client.verifyIdToken({
             idToken: idToken,
             audience: CLIENT_ID,
         });
 
         const payload = ticket.getPayload();
-        if (payload) {
-            return res.status(200).json({ message: 'Authentication successful', user: payload });
-        } else {
-            return res.status(500).json({ message: 'Invalid token' });
+        if (!payload) {
+            return res.status(401).json({ error: 'Invalid or expired token' });
         }
+
+        const { email, name, picture } = payload;
+
+        // Check if user exists in database
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create new user from Google auth
+            user = new User({
+                username: name || email.split('@')[0],
+                email: email,
+                password: 'google-auth-' + idToken.substring(0, 20), // Set a placeholder password
+                image: picture || 'http://localhost:3000/api/users/image/avatar/avatar.jpg'
+            });
+            await user.save();
+            console.log('New user created via Google auth:', email);
+        }
+
+        // Ensure JWT_SECRET is configured
+        if (!process.env.JWT_SECRET) {
+            console.error('JWT_SECRET is not configured');
+            return res.status(500).json({ error: 'Server configuration error' });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            {
+                userId: user._id,
+                username: user.username,
+                email: user.email,
+                phone: user.phone,
+                image: user.image,
+                recettes: user.recettes,
+                comments: user.comments
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        return res.status(200).json({
+            message: 'Google authentication successful',
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                image: user.image,
+                phone: user.phone
+            },
+            token: token
+        });
     } catch (error) {
-        console.error('Error verifying idToken:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        console.error('Error verifying Google idToken:', error);
+        return res.status(500).json({ error: 'Internal server error during Google authentication' });
     }
 };
 
@@ -164,24 +213,31 @@ const forgotPassword = async (req, res) => {
 
     // Validate email input
     if (!email) {
-        return res.status(400).send({message: "Email is required"});
+        return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
     }
 
     try {
-        const user = await User.findOne({email});
+        const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(404).send({message: "User does not exist"});
+            return res.status(404).json({ error: 'User with this email does not exist' });
         }
 
-
+        // Generate reset code
         const randomNumber = Math.floor(100000 + Math.random() * 900000);
         const token = generateResetToken(randomNumber);
 
+        // Send reset code via email
         const success = await sendEmail({
             from: process.env.GMAIL_USER,
             to: email,
-            subject: "Easy kitchen - Password Reset Code",
+            subject: "Easy Kitchen - Password Reset Code",
             html:
                 `<!DOCTYPE html>
                 <html lang="">
@@ -208,7 +264,7 @@ const forgotPassword = async (req, res) => {
                           </tr>
                           <tr>
                             <td style="font-family: 'Open Sans', sans-serif; font-size: 16px; text-align: center; padding: 10px 25px;">
-                              Please use the verification code below on the easy kitchen app:
+                              Please use the verification code below on the Easy Kitchen app:
                             </td>
                           </tr>
                           <tr>
@@ -236,42 +292,61 @@ const forgotPassword = async (req, res) => {
         });
 
         if (success) {
-            console.log("Reset token generated for user:", user.email);
-            return res.status(200).send({
-                message: "Reset email has been sent to: " + user.email,
+            console.log('Reset code sent to user:', email);
+            return res.status(200).json({
+                message: 'Password reset code has been sent to your email',
+                email: email,
                 token: token
             });
         } else {
-            return res.status(500).send({
-                message: "Email could not be sent"
+            return res.status(500).json({
+                error: 'Failed to send reset code. Please try again later.'
             });
         }
     } catch (error) {
-        console.error("Error in forgotPassword:", error);
-        return res.status(500).send({
-            message: "An error occurred while processing your request",
-            error: error.message
+        console.error('Error in forgotPassword:', error);
+        return res.status(500).json({
+            error: 'An error occurred while processing your request'
         });
     }
 };
 
 const verifyResetCode = async (req, res) => {
-    const {resetCode, token} = req.body;
+    const { resetCode, token } = req.body;
 
+    // Validate required inputs
     if (!resetCode || !token) {
-        return res.status(400).send({message: "Reset code and token are required"});
+        return res.status(400).json({ error: 'Reset code and token are required' });
+    }
+
+    // Validate JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+        console.error('JWT_SECRET is not configured');
+        return res.status(500).json({ error: 'Server configuration error' });
     }
 
     try {
+        // Verify token and extract reset code
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        // Convert both to string for comparison to avoid type mismatch
+
+        // Convert both to string for safe comparison
         if (String(decoded.resetCode) === String(resetCode)) {
-            return res.status(200).send({message: "Success"});
+            return res.status(200).json({
+                message: 'Reset code verified successfully',
+                verified: true
+            });
         } else {
-            return res.status(403).send({message: "Invalid reset code"});
+            return res.status(403).json({
+                error: 'Invalid reset code',
+                verified: false
+            });
         }
     } catch (error) {
-        return res.status(500).send({message: "Invalid or expired token", error: error.message});
+        console.error('Error verifying reset code:', error.message);
+        return res.status(401).json({
+            error: 'Invalid or expired token',
+            verified: false
+        });
     }
 }
 
@@ -280,51 +355,75 @@ const resetPassword = async (req, res) => {
 
     // Validate required fields
     if (!email || !password) {
-        return res.status(400).send({message: "Email and password are required"});
+        return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
     }
 
     // Validate password strength
     if (typeof password !== 'string' || password.trim().length < 6) {
-        return res.status(400).send({message: "Password must be at least 6 characters long"});
+        return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
 
     try {
         // Check if user exists
-        const user = await User.findOne({email});
+        const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).send({message: "User not found"});
+            return res.status(404).json({ error: 'User not found' });
         }
 
-        // Update password
+        // Hash the new password
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Update password
         await User.findOneAndUpdate(
-            {email},
+            { email },
             {
                 $set: {
                     password: hashedPassword,
                 },
-            }
+            },
+            { new: true }
         );
 
-        res.status(200).send({message: "Password reset successful"});
+        console.log('Password reset successful for user:', email);
+        return res.status(200).json({
+            message: 'Password reset successful',
+            email: email
+        });
     } catch (error) {
         console.error('Error resetting password:', error);
-        res.status(500).send({message: "Error resetting password", error: error.message});
+        return res.status(500).json({ error: 'An error occurred while resetting password' });
     }
 }
 
 function generateResetToken(resetCode) {
+    // Ensure JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET is not configured');
+    }
+
     return jwt.sign(
-        {resetCode},
+        { resetCode },
         process.env.JWT_SECRET,
         {
-            expiresIn: "1h", // 1 hour - more secure than 100000000ms
+            expiresIn: "240h", // 1 hour - more secure than 100000000ms
         }
-    )
+    );
 }
 
 async function sendEmail(mailOptions) {
     try {
+        // Validate required environment variables
+        if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
+            console.error('Gmail credentials are not configured in environment variables');
+            return false;
+        }
+
         let transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -334,13 +433,13 @@ async function sendEmail(mailOptions) {
         });
 
         await transporter.verify();
-        console.log("Server is ready to take our messages");
+        console.log("Email server is ready to send messages");
 
         const info = await transporter.sendMail(mailOptions);
-        console.log("Email sent: " + info.response);
+        console.log("Email sent successfully:", info.response);
         return true;
     } catch (error) {
-        console.log("Email error:", error);
+        console.error('Error sending email:', error.message);
         return false;
     }
 }

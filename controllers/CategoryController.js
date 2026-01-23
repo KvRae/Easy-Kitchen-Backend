@@ -1,8 +1,21 @@
-const category = require('../models/category');
+const Category = require('../models/category');
 
 // get all categories
 exports.getAll = async (req, res) => {
-    category.find()
-        .then(category => res.status(200).json(category))
-        .catch(error => res.status(400).json({ error }));
+    try {
+        const categories = await Category.find();
+
+        if (!categories || categories.length === 0) {
+            return res.status(404).json({ message: 'No categories found' });
+        }
+
+        return res.status(200).json({
+            message: 'Categories retrieved successfully',
+            count: categories.length,
+            data: categories
+        });
+    } catch (error) {
+        console.error('Error fetching all categories:', error);
+        res.status(500).json({ error: 'An error occurred while retrieving categories' });
+    }
 }
