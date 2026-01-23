@@ -2,6 +2,7 @@ const User = require('../models/user')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
+const sgMail = require('@sendgrid/mail');
 const { OAuth2Client } = require('google-auth-library');
 const CLIENT_ID = process.env.CLIENT_ID;
 const client = new OAuth2Client(CLIENT_ID);
@@ -436,13 +437,43 @@ function generateResetToken(resetCode) {
 }
 
 async function sendEmail(mailOptions) {
-    try {
-        if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
-            console.error('Gmail credentials are not configured in environment variables');
-            return false;
-        }
+    // Strategy 1: Try SendGrid (recommended for Render)
+    if (process.env.SENDGRID_API_KEY) {
+        try {
+            console.log('Attempting to send email via SendGrid...');
+            sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-        const transporter = nodemailer.createTransport({
+            const msg = {
+                to: mailOptions.to,
+                from: process.env.SENDGRID_FROM_EMAIL || process.env.GMAIL_USER,
+                subject: mailOptions.subject,
+                html: mailOptions.html,
+            };
+
+            await sgMail.send(msg);
+            console.log('✓ Email sent successfully via SendGrid');
+            return true;
+        } catch (error) {
+            console.error('✗ Failed to send via SendGrid:', error.message);
+            if (error.response) {
+                console.error('SendGrid error details:', error.response.body);
+            }
+            // Fall through to try Gmail SMTP
+        }
+    }
+
+    // Strategy 2: Try Gmail SMTP (fallback)
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
+        console.error('No email service configured. Please set either:');
+        console.error('  - SENDGRID_API_KEY and SENDGRID_FROM_EMAIL (recommended)');
+        console.error('  - GMAIL_USER and GMAIL_PASSWORD (may not work on some hosts)');
+        return false;
+    }
+
+    // Try multiple Gmail SMTP configurations
+    const smtpConfigs = [
+        {
+            name: 'Gmail SMTP Port 587 (STARTTLS)',
             host: 'smtp.gmail.com',
             port: 587,
             secure: false,
@@ -450,23 +481,62 @@ async function sendEmail(mailOptions) {
                 user: process.env.GMAIL_USER,
                 pass: process.env.GMAIL_PASSWORD,
             },
-            connectionTimeout: 10000,
-            greetingTimeout: 10000,
-            socketTimeout: 10000,
+            connectionTimeout: 20000,
+            greetingTimeout: 20000,
+            socketTimeout: 20000,
+            tls: {
+                rejectUnauthorized: false,
+                minVersion: 'TLSv1.2'
+            }
+        },
+        {
+            name: 'Gmail SMTP Port 465 (SSL)',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: process.env.GMAIL_USER,
+                pass: process.env.GMAIL_PASSWORD,
+            },
+            connectionTimeout: 20000,
+            greetingTimeout: 20000,
+            socketTimeout: 20000,
             tls: {
                 rejectUnauthorized: false
             }
-        });
+        }
+    ];
 
-        // Skip verification and send directly
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully:', info.response);
-        return true;
-    } catch (error) {
-        console.error('Error sending email:', error.message);
-        console.error('Full error:', error);
-        return false;
+    // Try each Gmail SMTP configuration
+    for (const config of smtpConfigs) {
+        try {
+            console.log(`Attempting to send email via ${config.name}...`);
+            const transporter = nodemailer.createTransport(config);
+            const info = await transporter.sendMail(mailOptions);
+            console.log(`✓ Email sent successfully via ${config.name}:`, info.response);
+            return true;
+        } catch (error) {
+            console.error(`✗ Failed to send via ${config.name}:`, error.message);
+            // Continue to next configuration
+        }
     }
+
+    // All strategies failed
+    console.error('');
+    console.error('❌ ALL EMAIL METHODS FAILED');
+    console.error('');
+    console.error('Render free tier may block outbound SMTP connections.');
+    console.error('');
+    console.error('🔧 SOLUTION: Use SendGrid (free tier: 100 emails/day)');
+    console.error('');
+    console.error('Steps:');
+    console.error('1. Sign up: https://signup.sendgrid.com/');
+    console.error('2. Get API key: Settings → API Keys → Create API Key');
+    console.error('3. Add to Render environment variables:');
+    console.error('   SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxx');
+    console.error('   SENDGRID_FROM_EMAIL=noreply@yourdomain.com');
+    console.error('');
+    return false;
 }
 
 
