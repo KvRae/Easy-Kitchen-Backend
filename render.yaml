@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: easy-kitchen-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.19.0
+      - key: NPM_VERSION
+        value: 9.0.0
