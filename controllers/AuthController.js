@@ -7,134 +7,125 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const client = new OAuth2Client(CLIENT_ID);
 
 
-const register = (req, res) => {
-    const { username, email, password } = req.body;  // Corrected variable name from forgotPassword to password
+const register = async (req, res) => {
+    const { username, email, password } = req.body;
 
     // Validate required fields
     if (!username || !email || !password) {
         return res.status(400).json({ error: 'All fields are required (username, email, password)' });
     }
 
-    // Check if the password is a valid string and not empty
-    if (typeof password !== 'string' || password.trim() === '') {
-        return res.status(400).json({ error: 'Password must be a valid string' });
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Function to generate a random phone number
-    const generatePhoneNumber = () => {
-        const areaCode = Math.floor(Math.random() * 900) + 100;  // Random 3 digits for area code
-        const prefix = Math.floor(Math.random() * 900) + 100;  // Random 3 digits for prefix
-        const lineNumber = Math.floor(Math.random() * 9000) + 1000;  // Random 4 digits for line number
+    // Validate password strength - minimum 6 characters
+    if (typeof password !== 'string' || password.trim().length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
 
-        return `+1 (${areaCode}) ${prefix}-${lineNumber}`;
-    };
+    try {
+        // Check if username or email already exists in the database
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            return res.status(400).json({ error: 'User already exists with this username or email' });
+        }
 
-    // Generate a random phone number
-    const phone = generatePhoneNumber();
+        // Hash the password
+        const hashedPass = await bcrypt.hash(password, 10);
 
-    // Check if username or email already exists in the database
-    User.findOne({ $or: [{ username }, { email }] })
-        .then(existingUser => {
-            if (existingUser) {
-                return res.status(400).json({ error: 'User already exists with this username or email' });
-            }
-
-            // Hash the password
-            bcrypt.hash(password, 10, (err, hashedPass) => {
-                if (err) {
-                    console.error('Error hashing password:', err);
-                    return res.status(500).json({ error: 'Internal server error while hashing password' });
-                }
-
-                // Create the new user
-                const user = new User({
-                    username,
-                    email,
-                    password: hashedPass,
-                    phone,  // Include the generated phone number
-                });
-
-                // Save the user to the database
-                user.save()
-                    .then(newUser => {
-                        // Don't send sensitive data like the hashed password
-                        res.status(201).json({
-                            message: 'Account created successfully',
-                            user: {
-                                username: newUser.username,
-                                email: newUser.email,
-                                phone: newUser.phone,  // Optionally include phone number in the response
-                            }
-                        });
-                    })
-                    .catch(err => {
-                        console.error('Error saving user:', err);
-                        res.status(500).json({ error: 'An error occurred while saving the user' });
-                    });
-            });
-        })
-        .catch(err => {
-            console.error('Error checking for existing user:', err);
-            res.status(500).json({ error: 'Internal server error' });
+        // Create the new user (phone is optional, not auto-generated)
+        const user = new User({
+            username,
+            email,
+            password: hashedPass
         });
+
+        // Save the user to the database
+        const newUser = await user.save();
+
+        // Don't send sensitive data like the hashed password
+        return res.status(201).json({
+            message: 'Account created successfully',
+            user: {
+                id: newUser._id,
+                username: newUser.username,
+                email: newUser.email
+            }
+        });
+    } catch (err) {
+        console.error('Error in register:', err);
+        res.status(500).json({ error: 'An error occurred while creating the user' });
+    }
 };
 
 
 
 
-const login = (req, res) => {
+const login = async (req, res) => {
     const { username, email, password } = req.body;
 
- 
-    const loginField = email ? { email } : { username };
+    // Validate that at least one login field is provided
+    if (!password) {
+        return res.status(400).json({ error: 'Password is required' });
+    }
 
-    User.findOne(loginField)
-        .then(user => {
-            if (!user) {
-                return res.status(401).json({ error: 'Incorrect username or email, or password' });
-            }
+    if (!username && !email) {
+        return res.status(400).json({ error: 'Username or email is required' });
+    }
 
-            // Compare the password with the stored hash
-            bcrypt.compare(password, user.password)
-                .then(valid => {
-                    if (!valid) {
-                        return res.status(401).json({ error: 'Incorrect username or email, or password' });
-                    }
+    try {
+        // Build login field - prefer email if provided
+        const loginField = email ? { email } : { username };
 
-                    const token = jwt.sign(
-                        { 
-                            userId: user._id,
-                            username: user.username,
-                            email: user.email,
-                            phone: user.phone,
-                            image: user.image,
-                            recettes: user.recettes,
-                            comments: user.comments
-                        },
-                        process.env.JWT_SECRET || 'RANDOM_TOKEN_SECRET',
-                        { expiresIn: '24h' }
-                    );
+        const user = await User.findOne(loginField);
+        if (!user) {
+            return res.status(401).json({ error: 'Incorrect username or email, or password' });
+        }
 
-                    return res.status(200).json({
-                        message: 'Login successful',
-                        user: {
-                            username: user.username,
-                            email: user.email,
-                            phone: user.phone,
-                            image: user.image,
-                        },
-                        token: token
-                    });
-                })
-                .catch(error => {
-                    console.error('Error comparing password:', error);
-                    return res.status(500).json({ error: 'Internal server error' });
-                });
-        })
-        .catch(error => {
-            console.error('Error finding user:', error);
-            return res.status(500).json({ error: 'Internal server error' });
+        // Compare the password with the stored hash
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) {
+            return res.status(401).json({ error: 'Incorrect username or email, or password' });
+        }
+
+        // Ensure JWT_SECRET is configured
+        if (!process.env.JWT_SECRET) {
+            console.error('JWT_SECRET is not configured');
+            return res.status(500).json({ error: 'Server configuration error' });
+        }
+
+        const token = jwt.sign(
+            {
+                userId: user._id,
+                username: user.username,
+                email: user.email,
+                phone: user.phone,
+                image: user.image,
+                recettes: user.recettes,
+                comments: user.comments
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        return res.status(200).json({
+            message: 'Login successful',
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                phone: user.phone,
+                image: user.image
+            },
+            token: token
         });
+    } catch (error) {
+        console.error('Error in login:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
 };
 
 
@@ -182,6 +173,7 @@ const forgotPassword = async (req, res) => {
         if (!user) {
             return res.status(404).send({message: "User does not exist"});
         }
+
 
         const randomNumber = Math.floor(100000 + Math.random() * 900000);
         const token = generateResetToken(randomNumber);
