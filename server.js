@@ -6,7 +6,7 @@ const mongoose = require('mongoose')
 const errorHandler = require('./middleware/error-handler')
 const multer = require('multer')
 const cors = require('cors')
-const fs = require('fs-extra')
+const { initializeDatabase } = require('./services/dbInitialize')
 
 // Validate required environment variables
 if (!process.env.DATABASE_URL) {
@@ -31,7 +31,10 @@ mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTo
 const db = mongoose.connection
 mongoose.set('useCreateIndex', true);
 db.on('error', (error) => console.error(error))
-db.once('open', () => console.log('Connected to Database'))
+db.once('open', async () => {
+  console.log('Connected to Database')
+  await initializeDatabase()
+})
 
 //add routes variables
 const userRouter = require('./routes/users')
