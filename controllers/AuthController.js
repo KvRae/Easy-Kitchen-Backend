@@ -8,7 +8,7 @@ const client = new OAuth2Client(CLIENT_ID);
 
 
 const register = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, phone } = req.body;
 
     // Validate required fields
     if (!username || !email || !password) {
@@ -26,11 +26,28 @@ const register = async (req, res) => {
         return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
 
+    // Validate phone only if provided (allow optional)
+    let normalizedPhone;
+    if (phone !== undefined && phone !== null && String(phone).trim() !== '') {
+        normalizedPhone = String(phone).trim();
+        if (normalizedPhone.length < 8) {
+            return res.status(400).json({ error: 'Phone number must be at least 8 characters if provided' });
+        }
+    }
+
     try {
         // Check if username or email already exists in the database
         const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
             return res.status(400).json({ error: 'User already exists with this username or email' });
+        }
+
+        // If phone is provided, ensure it is unique
+        if (normalizedPhone) {
+            const phoneOwner = await User.findOne({ phone: normalizedPhone });
+            if (phoneOwner) {
+                return res.status(400).json({ error: 'Phone number already in use' });
+            }
         }
 
         // Hash the password
@@ -40,7 +57,8 @@ const register = async (req, res) => {
         const user = new User({
             username,
             email,
-            password: hashedPass
+            password: hashedPass,
+            ...(normalizedPhone ? { phone: normalizedPhone } : {})
         });
 
         // Save the user to the database
@@ -52,7 +70,8 @@ const register = async (req, res) => {
             user: {
                 id: newUser._id,
                 username: newUser.username,
-                email: newUser.email
+                email: newUser.email,
+                phone: newUser.phone,
             }
         });
     } catch (err) {
@@ -418,25 +437,26 @@ function generateResetToken(resetCode) {
 
 async function sendEmail(mailOptions) {
     try {
-        // Validate required environment variables
         if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
             console.error('Gmail credentials are not configured in environment variables');
             return false;
         }
 
-        let transporter = nodemailer.createTransport({
-            service: "gmail",
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
             auth: {
                 user: process.env.GMAIL_USER,
                 pass: process.env.GMAIL_PASSWORD,
             },
+            connectionTimeout: 15000, // fail fast on network blocks
+            socketTimeout: 15000,
         });
 
         await transporter.verify();
-        console.log("Email server is ready to send messages");
-
         const info = await transporter.sendMail(mailOptions);
-        console.log("Email sent successfully:", info.response);
+        console.log('Email sent successfully:', info.response);
         return true;
     } catch (error) {
         console.error('Error sending email:', error.message);
