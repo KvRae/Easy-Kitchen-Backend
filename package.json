@@ -26,7 +26,9 @@
         "multer": "^1.4.5-lts.1",
         "nodemailer": "^6.9.1",
         "passport": "^0.6.0",
-        "passport-google-oauth20": "^2.0.0"
+        "passport-google-oauth20": "^2.0.0",
+        "swagger-jsdoc": "^6.2.8",
+        "swagger-ui-express": "^5.0.1"
     },
     "devDependencies": {
         "dotenv": "^8.0.0",

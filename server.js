@@ -6,6 +6,7 @@ const mongoose = require('mongoose')
 const errorHandler = require('./middleware/error-handler')
 const multer = require('multer')
 const cors = require('cors')
+const { specs, swaggerUi } = require('./swagger')
 
 // Validate required environment variables
 if (!process.env.DATABASE_URL) {
@@ -48,6 +49,63 @@ app.use(cors())
 app.use(express.json())
 
 //app.use(multer({dest: 'images'}).single('image'))
+
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Health check endpoint
+ *     description: Returns the health status of the API and database connection
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HealthCheck'
+ */
+app.get('/', (req, res) => {
+  const healthCheck = {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+  };
+  res.status(200).json(healthCheck);
+});
+
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Alternative health check endpoint
+ *     description: Returns the health status of the API and database connection
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HealthCheck'
+ */
+app.get('/health', (req, res) => {
+  const healthCheck = {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+  };
+  res.status(200).json(healthCheck);
+});
+
+// Swagger API documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Easy Kitchen API Documentation',
+}));
 
 // use routes
 app.use('/api/', authRoute)
